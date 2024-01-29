@@ -6,7 +6,7 @@ DBsize = 20
 rec_size = 71 #if a Windows file with cr lf at ends of the lines
 
 sample = DB()
-#sample.createDB(filepath)
+sample.createDB(filepath)
 sample.readDB(filepath, DBsize, rec_size)
 
 print("\n------------- Testing getRecord ------------\n")
