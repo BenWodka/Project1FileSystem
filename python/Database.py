@@ -15,6 +15,7 @@ class DB:
 
 
     #create database
+    print(f'file path: {os.getcwd()}')
     def createDB(self,filename):
         #Generate file names
         csv_filename = filename + ".csv"
