@@ -14,12 +14,15 @@ class DB:
         self.Industry_size=20
 
 
+
     #create database
     print(f'file path: {os.getcwd()}')
+
     def createDB(self,filename):
         #Generate file names
         csv_filename = filename + ".csv"
         text_filename = filename + ".data"
+        config_filename = filename + ".config"
 
         # Read the CSV file and write into data files
         with open(csv_filename, "r") as csv_file:
@@ -34,18 +37,20 @@ class DB:
             filestream.write("{:{width}.{width}}".format(dict["industry"],width=self.Industry_size))
             filestream.write("\n")
 
-            #write an empty records
-            # filestream.write("{:{width}.{width}}".format('_empty_',width=self.Id_size))
-            # filestream.write("{:{width}.{width}}".format(' ',width=self.Experience_size))
-            # filestream.write("{:{width}.{width}}".format(' ',width=self.Marriage_size))
-            # filestream.write("{:{width}.{width}}".format(' ',width=self.Wage_size))
-            # filestream.write("{:{width}.{width}}".format(' ',width=self.Industry_size))
-            # filestream.write("\n")
-
-
+            #write an empty record of same length
+            filestream.write("{:{width}.{width}}".format('_empty_',width=self.Id_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.Experience_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.Marriage_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.Wage_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.Industry_size))
+            filestream.write("\n")
 
         
         with open(text_filename,"w") as outfile:
+            for dict in data_list:
+                writeDB(outfile,dict)
+            
+        with open(config_filename,"w") as outfile:
             for dict in data_list:
                 writeDB(outfile,dict)
 
@@ -158,10 +163,59 @@ class DB:
 
         return -1  # No non-empty record found
 
-
-
-
     #close the database
     def CloseDB(self):
 
         self.text_filename.close()
+
+    def openDB():
+        print()
+
+    def updateRecord():
+        print()
+    
+    def createRecord():
+        print()
+
+    def addRecord():
+        print()
+    
+    def deleteRecord():
+        print()
+        
+    def menu():
+        print("\nWelcome to the database. Choose one of the following menu options:")
+        print('1) Create new database')
+        print('2) Open database')
+        print('3) Close database')
+        print('4) Display record')
+        print('5) Update record')
+        print('6) Create report')
+        print('7) Add record')
+        print('8) Delete record')
+        print('9) Quit\n')
+
+    userChoice = input(menu())
+    match userChoice:
+        case "1": #Create new database
+            sourceFile = input("\nEnter name of .csv file (i.e: for Titanic.csv, type 'Titanic and hit enter.\n)")
+            createDB(sourceFile)
+        case "2": # Open database
+            openDB()
+        case "3": # Close database
+            CloseDB()
+        case "4": # Display Record
+            getRecord()
+        case "5": # Update Record
+            updateRecord()
+        case "6": # Create Report
+            createRecord()
+        case "7": # Add record
+            addRecord()
+        case "8": # Delete Record
+            deleteRecord()
+        case "9": #Quit
+            CloseDB()
+
+        
+
