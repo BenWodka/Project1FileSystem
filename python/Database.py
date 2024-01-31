@@ -7,11 +7,13 @@ class DB:
     def __init__(self):
         self.filestream = None
         self.num_record = 0
+        #self.numBytes = 72 # num of bytes for each record
         self.Id_size=10
         self.Experience_size=5
         self.Marriage_size=5
         self.Wage_size=30
         self.Industry_size=20
+        self.dbClosed = False
 
 
 
@@ -167,20 +169,24 @@ class DB:
     def CloseDB(self):
 
         self.text_filename.close()
+        dbClosed = True
 
-    def openDB():
+    def openDB(self, db_name):
+        DB.readDB(db_name, 100, 72)
+
+
         print()
 
-    def updateRecord():
+    def updateRecord(self):
         print()
     
-    def createRecord():
+    def createRecord(self):
         print()
 
-    def addRecord():
+    def addRecord(self):
         print()
     
-    def deleteRecord():
+    def deleteRecord(self):
         print()
         
     def menu():
@@ -195,27 +201,5 @@ class DB:
         print('8) Delete record')
         print('9) Quit\n')
 
-    userChoice = input(menu())
-    match userChoice:
-        case "1": #Create new database
-            sourceFile = input("\nEnter name of .csv file (i.e: for Titanic.csv, type 'Titanic and hit enter.\n)")
-            createDB(sourceFile)
-        case "2": # Open database
-            openDB()
-        case "3": # Close database
-            CloseDB()
-        case "4": # Display Record
-            getRecord()
-        case "5": # Update Record
-            updateRecord()
-        case "6": # Create Report
-            createRecord()
-        case "7": # Add record
-            addRecord()
-        case "8": # Delete Record
-            deleteRecord()
-        case "9": #Quit
-            CloseDB()
 
-        
 
