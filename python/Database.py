@@ -7,6 +7,7 @@ class DB:
     #default constructor
     def __init__(self):
         self.filestream = None
+        self.db_file = None
         self.num_record = 0
         #self.numBytes = 72 # num of bytes for each record
         #91 bytes per record = 93 on Windows
@@ -67,6 +68,7 @@ class DB:
                 with open(text_filename,"w") as outfile:
                 #ensures it reads csv file one line at a time
                     reader = csv.DictReader(csv_file, fieldnames=('ID', 'firstName', 'lastName', 'age', 'ticketNum', 'fare', 'dateOfPurchase'))
+                    print(reader)
                     #writes record one at a time (two if you count empty record)
                     for row in reader:
                         writeRecord(outfile,row)
@@ -98,28 +100,25 @@ class DB:
         else:
             self.text_filename = open(self.filestream, 'r+')
     
-    def openDB(self, filename):
-        successValue = False
+    def openDB(self, filename): #returns True if successful
+
+        #Checks if a database is already open
+        if self.dbClosed == False:
+            print("A database is already open. Please close it before opening another.")
+            return False
+        
         self.filestream = filename + ".data"
 
         #checks to see if database doesn't exist
         if not os.path.isfile(self.filestream):
             print(str(filename)+" database not found")
-            return successValue #Not found, return false
+            return False #Not found, return false
         
         else:
-            self.filestream = open(self.filestream, "r")
-            successValue = True
+            self.db_file = open(self.filestream, "r")
+            self.dbClosed = False
             print("\nDatabase opened successfully.\n")
-        
-        # else:   #if database exists, read config file
-        #     content = self.readConfigFile(db_name)
-        #     if content is not None:
-        #         numRecords = content["numRecords"]
-        #         recordSize = content["recordSize"]
-        #         successValue = True
-
-        return successValue
+            return True
         
     #read record method
     def getRecord(self, recordNum):
