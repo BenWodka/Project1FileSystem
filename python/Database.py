@@ -9,14 +9,15 @@ class DB:
         self.filestream = None
         self.num_record = 0
         #self.numBytes = 72 # num of bytes for each record
-        self.Id_size=10
-        self.Experience_size=5
-        self.Marriage_size=5
-        self.Wage_size=30
-        self.Industry_size=20
+        #91 bytes per record = 93 on Windows
+        self.Id_size=7 #must be 7 for _empty_
+        self.firstName_size=20
+        self.lastName_size=20
+        self.age_size=3
+        self.ticketNum_size=25
+        self.fare_size=6
+        self.dateOfPurchase_size=10
         self.dbClosed = False
-
-
 
     #create database
     print(f'file path: {os.getcwd()}')
@@ -25,37 +26,66 @@ class DB:
         #Generate file names
         csv_filename = filename + ".csv"
         text_filename = filename + ".data"
-        config_filename = filename + ".config"
+        #config_filename = filename + ".config"
 
-        # Read the CSV file and write into data files
-        with open(csv_filename, "r") as csv_file:
-            data_list = list(csv.DictReader(csv_file,fieldnames=('ID','experience','marriage','wages','industry')))
+        #reads config file to get specifications
+        configContent = self.readConfigFile(filename)
+
+        #sets attributes to what config file specifies
+        self.Id_size = configContent["PASSENGER_ID_SIZE"]
+        self.firstName_size = configContent["FIRST_NAME_SIZE"]
+        self.lastName_size = configContent["LAST_NAME_SIZE"]
+        self.age_size = configContent["AGE_SIZE"]
+        self.ticketNum_size = configContent["TICKET_NUM_SIZE"]
+        self.fare_size = configContent["FARE_SIZE"]
+        self.dateOfPurchase_size = configContent["DATE_OF_PURCHASE_SIZE"] 
 
 		# Formatting files with spaces so each field is fixed length, i.e. ID field has a fixed length of 10
-        def writeDB(filestream, dict):
+        def writeRecord(filestream, dict):
             filestream.write("{:{width}.{width}}".format(dict["ID"],width=self.Id_size))
-            filestream.write("{:{width}.{width}}".format(dict["experience"],width=self.Experience_size))
-            filestream.write("{:{width}.{width}}".format(dict["marriage"],width=self.Marriage_size))
-            filestream.write("{:{width}.{width}}".format(dict["wages"],width=self.Wage_size))
-            filestream.write("{:{width}.{width}}".format(dict["industry"],width=self.Industry_size))
+            filestream.write("{:{width}.{width}}".format(dict["firstName"],width=self.firstName_size))
+            filestream.write("{:{width}.{width}}".format(dict["lastName"],width=self.lastName_size))
+            filestream.write("{:{width}.{width}}".format(dict["age"],width=self.age_size))
+            filestream.write("{:{width}.{width}}".format(dict["ticketNum"],width=self.ticketNum_size))
+            filestream.write("{:{width}.{width}}".format(dict["fare"],width=self.fare_size))
+            filestream.write("{:{width}.{width}}".format(dict["dateOfPurchase"],width=self.dateOfPurchase_size))
             filestream.write("\n")
 
             #write an empty record of same length
             filestream.write("{:{width}.{width}}".format('_empty_',width=self.Id_size))
-            filestream.write("{:{width}.{width}}".format(' ',width=self.Experience_size))
-            filestream.write("{:{width}.{width}}".format(' ',width=self.Marriage_size))
-            filestream.write("{:{width}.{width}}".format(' ',width=self.Wage_size))
-            filestream.write("{:{width}.{width}}".format(' ',width=self.Industry_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.firstName_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.lastName_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.age_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.ticketNum_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.fare_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.dateOfPurchase_size))
             filestream.write("\n")
 
-        
-        with open(text_filename,"w") as outfile:
-            for dict in data_list:
-                writeDB(outfile,dict)
-            
-        with open(config_filename,"w") as outfile:
-            for dict in data_list:
-                writeDB(outfile,dict)
+        # Read the CSV file one line at a time, then writes to the .data file one record at a time
+        def readCSV(csv_filename):
+            with open(csv_filename, "r") as csv_file:
+                with open(text_filename,"w") as outfile:
+                #ensures it reads csv file one line at a time
+                    reader = csv.DictReader(csv_file, fieldnames=('ID', 'firstName', 'lastName', 'age', 'ticketNum', 'fare', 'dateOfPurchase'))
+                    #writes record one at a time (two if you count empty record)
+                    for row in reader:
+                        writeRecord(outfile,row)
+
+        readCSV(csv_filename)
+
+    #read config file
+    def readConfigFile(self, filename):
+        config_filename = filename + ".config"
+        self.filestream = filename + ".data"
+        #checks to see if config file doesn't exist
+        if not os.path.isfile(config_filename):
+            print(str(config_filename)+" not found")
+            successValue = False #should already be False. For redundancy
+            return successValue
+        with open(config_filename, "r") as file:
+            content = file.read()
+            content = ast.literal_eval(content) #puts content into a dictionary
+            return content
 
     #read the database
     def readDB(self, filename, DBsize, rec_size):
@@ -68,34 +98,26 @@ class DB:
         else:
             self.text_filename = open(self.filestream, 'r+')
     
-    def openDB(self, db_name, readOrWrite):
+    def openDB(self, filename):
         successValue = False
-
-        #read config file
-        def readConfigFile(self, db_name):
-            config_filename = db_name + ".config"
-            self.filestream = db_name + ".data"
-            #checks to see if config file doesn't exist
-            if not os.path.isfile(config_filename):
-                print(str(config_filename)+" not found")
-                successValue = False #should already be False. For redundancy
-                return successValue
-            with open(config_filename, "r") as file:
-                content = file.read()
-                content = ast.literal_eval(content) #puts content into a dictionary
-                return content
+        self.filestream = filename + ".data"
 
         #checks to see if database doesn't exist
         if not os.path.isfile(self.filestream):
-            print(str(db_name)+" database not found")
+            print(str(filename)+" database not found")
             return successValue #Not found, return false
         
-        else:   #if database exists, read config file
-            content = readConfigFile(db_name)
-            if content is not None:
-                numRecords = content["numRecords"]
-                recordSize = content["recordSize"]
-                successValue = True
+        else:
+            self.filestream = open(self.filestream, "r")
+            successValue = True
+            print("\nDatabase opened successfully.\n")
+        
+        # else:   #if database exists, read config file
+        #     content = self.readConfigFile(db_name)
+        #     if content is not None:
+        #         numRecords = content["numRecords"]
+        #         recordSize = content["recordSize"]
+        #         successValue = True
 
         return successValue
         
@@ -103,7 +125,7 @@ class DB:
     def getRecord(self, recordNum):
 
         self.flag = False
-        id = experience = marriage = wage = industry = "None"
+        id = firstName = lastName = age = ticketNum = fare = dateOfPurchase = "None"
 
         if recordNum >=0 and recordNum < self.record_size:
             self.text_filename.seek(0,0)
@@ -112,12 +134,15 @@ class DB:
             self.flag = True
         
         if self.flag:
-            id = line[0:10]
-            experience = line[10:15]
-            marriage = line[15:20]
-            wage = line[20:40]
-            industry = line[40:70]
-            self.record = dict({"ID":id,"experience":experience,"marriage":marriage,"wages":wage,"industry":industry})
+            #Ok so what i did here was make the bounds dependent on the variable size, so we dont have to rewrite this every time we change a variable size.
+            id = line[0:self.Id_size]
+            firstName = line[self.Id_size:self.Id_size+self.firstName_size]
+            lastName = line[self.Id_size+self.firstName_size:self.Id_size+self.firstName_size+self.lastName_size]
+            age = line[self.Id_size+self.firstName_size+self.lastName_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size]
+            ticketNum = line[self.Id_size+self.firstName_size+self.lastName_size+self.age_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size]
+            fare = line[self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size+self.fare_size]
+            dateOfPurchase = line[self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size+self.fare_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size+self.fare_size+self.dateOfPurchase_size]
+            self.record = dict({"ID":id,"firstName":firstName,"lastName":lastName,"age":age,"ticketNum":ticketNum,"fare":fare,"dateOfPurchase":dateOfPurchase})
 
     #Binary Search by record id
     def binarySearch(self, input_ID):
@@ -200,8 +225,9 @@ class DB:
     #close the database
     def CloseDB(self):
 
-        self.text_filename.close()
-        dbClosed = True
+            self.filestream.close()  # Close the file properly
+            self.dbClosed = True
+            print("\nDatabase closed successfully.\n")
 
     def updateRecord(self):
         print()
