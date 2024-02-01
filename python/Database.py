@@ -1,5 +1,6 @@
 import csv
 import os.path
+import ast
 # test 1
 class DB:
 
@@ -66,7 +67,38 @@ class DB:
             print(str(self.filestream)+" not found")
         else:
             self.text_filename = open(self.filestream, 'r+')
+    
+    def openDB(self, db_name, readOrWrite):
+        successValue = False
 
+        #read config file
+        def readConfigFile(self, db_name):
+            config_filename = db_name + ".config"
+            self.filestream = db_name + ".data"
+            #checks to see if config file doesn't exist
+            if not os.path.isfile(config_filename):
+                print(str(config_filename)+" not found")
+                successValue = False #should already be False. For redundancy
+                return successValue
+            with open(config_filename, "r") as file:
+                content = file.read()
+                content = ast.literal_eval(content) #puts content into a dictionary
+                return content
+
+        #checks to see if database doesn't exist
+        if not os.path.isfile(self.filestream):
+            print(str(db_name)+" database not found")
+            return successValue #Not found, return false
+        
+        else:   #if database exists, read config file
+            content = readConfigFile(db_name)
+            if content is not None:
+                numRecords = content["numRecords"]
+                recordSize = content["recordSize"]
+                successValue = True
+
+        return successValue
+        
     #read record method
     def getRecord(self, recordNum):
 
@@ -170,12 +202,6 @@ class DB:
 
         self.text_filename.close()
         dbClosed = True
-
-    def openDB(self, db_name):
-        DB.readDB(db_name, 100, 72)
-
-
-        print()
 
     def updateRecord(self):
         print()
