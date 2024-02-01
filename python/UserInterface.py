@@ -11,8 +11,11 @@ while running == True:
             filename = input("\nEnter name of .csv file (i.e: for Titanic.csv, type 'Titanic' and hit enter.\n)")
             database.createDB(filename)
         case "2": # Open database
-            db_name = input("\nEnter name of database to open (i.e: for Titanic database, type 'Titanic' and hit enter.\n)")
-            database.openDB(db_name)
+            if database.databaseClosed() == False:
+                print("\nThere is a database already open. You must close it to proceed.\n")
+            else:
+                db_name = input("\nEnter name of database to open (i.e: for Titanic database, type 'Titanic' and hit enter.\n)")
+                database.openDB(db_name)
         case "3": # Close database
             database.CloseDB()
         case "4": # Display Record

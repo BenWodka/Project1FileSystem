@@ -18,7 +18,7 @@ class DB:
         self.ticketNum_size=25
         self.fare_size=6
         self.dateOfPurchase_size=10
-        self.dbClosed = False
+        self.dbClosed = True
 
     #create database
     print(f'file path: {os.getcwd()}')
@@ -29,6 +29,10 @@ class DB:
         text_filename = filename + ".data"
         #config_filename = filename + ".config"
 
+        if not os.path.isfile(csv_filename):
+            print(str(csv_filename)+" not found")
+            return False
+        
         #reads config file to get specifications
         configContent = self.readConfigFile(filename)
 
@@ -74,6 +78,12 @@ class DB:
                         writeRecord(outfile,row)
 
         readCSV(csv_filename)
+        print("\nDatabase successfully created. If you wish to open this database, use option 2.\n")
+
+
+    def databaseClosed(self): # for Checking if db is open in case 2
+        return self.dbClosed
+    
 
     #read config file
     def readConfigFile(self, filename):
@@ -82,8 +92,7 @@ class DB:
         #checks to see if config file doesn't exist
         if not os.path.isfile(config_filename):
             print(str(config_filename)+" not found")
-            successValue = False #should already be False. For redundancy
-            return successValue
+            return False
         with open(config_filename, "r") as file:
             content = file.read()
             content = ast.literal_eval(content) #puts content into a dictionary
@@ -103,7 +112,7 @@ class DB:
     def openDB(self, filename): #returns True if successful
 
         #Checks if a database is already open
-        if self.dbClosed == False:
+        if self.dbClosed == False or self.db_file is not None:
             print("A database is already open. Please close it before opening another.")
             return False
         
@@ -224,9 +233,12 @@ class DB:
     #close the database
     def CloseDB(self):
 
-            self.filestream.close()  # Close the file properly
+        if self.db_file: #Makes sure a db is open
+            self.db_file.close()  # Close the file properly
             self.dbClosed = True
-            print("\nDatabase closed successfully.\n")
+            print(f"\nDatabase closed successfully.\n")
+        else:
+            print("\nNo open database file to close.\n")
 
     def updateRecord(self):
         print()
