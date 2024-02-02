@@ -136,7 +136,7 @@ class DB:
             print("\nDatabase opened successfully.\n")
             return True
         
-    #read record method
+    #FIX - Need this to be able to handle the _empty_ fields
     def getRecord(self, recordNum):
 
         self.flag = False
