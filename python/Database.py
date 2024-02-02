@@ -1,27 +1,31 @@
 import csv
 import os.path
 import ast
-# test 1
+
 class DB:
 
     #default constructor
     def __init__(self):
         self.filestream = None
         self.db_file = None
-        self.num_record = 0
-        #self.numBytes = 72 # num of bytes for each record
+        self.dbClosed = True
+
         #91 bytes per record = 93 on Windows
-        self.Id_size=7 #must be 7 for _empty_
-        self.firstName_size=20
+        self.record_size = 0
+        self.num_records = 0
+
+        self.Id_size=7  #must be 7 for _empty_
         self.lastName_size=20
+        self.firstName_size=20
         self.age_size=3
         self.ticketNum_size=25
         self.fare_size=6
         self.dateOfPurchase_size=10
-        self.dbClosed = True
+
+
 
     #create database
-    print(f'file path: {os.getcwd()}')
+    #print(f'file path: {os.getcwd()}')
 
     def createDB(self,filename):
         #Generate file names
@@ -37,9 +41,11 @@ class DB:
         configContent = self.readConfigFile(filename)
 
         #sets attributes to what config file specifies
+        self.record_size = configContent["recordSize"]
+        self.num_records = configContent["numRecords"]
         self.Id_size = configContent["PASSENGER_ID_SIZE"]
-        self.firstName_size = configContent["FIRST_NAME_SIZE"]
         self.lastName_size = configContent["LAST_NAME_SIZE"]
+        self.firstName_size = configContent["FIRST_NAME_SIZE"]
         self.age_size = configContent["AGE_SIZE"]
         self.ticketNum_size = configContent["TICKET_NUM_SIZE"]
         self.fare_size = configContent["FARE_SIZE"]
@@ -48,8 +54,8 @@ class DB:
 		# Formatting files with spaces so each field is fixed length, i.e. ID field has a fixed length of 10
         def writeRecord(filestream, dict):
             filestream.write("{:{width}.{width}}".format(dict["ID"],width=self.Id_size))
+            filestream.write("{:{width}.{width}}".format(dict["lastName"],width=self.lastName_size))            
             filestream.write("{:{width}.{width}}".format(dict["firstName"],width=self.firstName_size))
-            filestream.write("{:{width}.{width}}".format(dict["lastName"],width=self.lastName_size))
             filestream.write("{:{width}.{width}}".format(dict["age"],width=self.age_size))
             filestream.write("{:{width}.{width}}".format(dict["ticketNum"],width=self.ticketNum_size))
             filestream.write("{:{width}.{width}}".format(dict["fare"],width=self.fare_size))
@@ -58,8 +64,8 @@ class DB:
 
             #write an empty record of same length
             filestream.write("{:{width}.{width}}".format('_empty_',width=self.Id_size))
+            filestream.write("{:{width}.{width}}".format(' ',width=self.lastName_size))            
             filestream.write("{:{width}.{width}}".format(' ',width=self.firstName_size))
-            filestream.write("{:{width}.{width}}".format(' ',width=self.lastName_size))
             filestream.write("{:{width}.{width}}".format(' ',width=self.age_size))
             filestream.write("{:{width}.{width}}".format(' ',width=self.ticketNum_size))
             filestream.write("{:{width}.{width}}".format(' ',width=self.fare_size))
@@ -71,12 +77,13 @@ class DB:
             with open(csv_filename, "r") as csv_file:
                 with open(text_filename,"w") as outfile:
                 #ensures it reads csv file one line at a time
-                    reader = csv.DictReader(csv_file, fieldnames=('ID', 'firstName', 'lastName', 'age', 'ticketNum', 'fare', 'dateOfPurchase'))
+                    reader = csv.DictReader(csv_file, fieldnames=('ID', 'lastName', 'firstName', 'age', 'ticketNum', 'fare', 'dateOfPurchase'))
                     print(reader)
                     #writes record one at a time (two if you count empty record)
                     for row in reader:
                         writeRecord(outfile,row)
 
+        
         readCSV(csv_filename)
         print("\nDatabase successfully created. If you wish to open this database, use option 2.\n")
 
@@ -133,24 +140,34 @@ class DB:
     def getRecord(self, recordNum):
 
         self.flag = False
-        id = firstName = lastName = age = ticketNum = fare = dateOfPurchase = "None"
+        id = lastName = firstName = age = ticketNum = fare = dateOfPurchase = "None"
+        offset = recordNum*self.record_size
+        print(f"Self.record_size: {self.record_size}\n")
+        print(f"Seeking to byte offset: {offset}")
+
+        if self.db_file is None:
+            print("\nNo database file is open.\n")
+            return None
 
         if recordNum >=0 and recordNum < self.record_size:
-            self.text_filename.seek(0,0)
-            self.text_filename.seek(recordNum*self.rec_size)
-            line= self.text_filename.readline().rstrip('\n')
+            #self.db_file.seek(0,0)
+            self.db_file.seek(offset)
+            line= self.db_file.readline().rstrip('\n')
             self.flag = True
         
         if self.flag:
             #Ok so what i did here was make the bounds dependent on the variable size, so we dont have to rewrite this every time we change a variable size.
             id = line[0:self.Id_size]
-            firstName = line[self.Id_size:self.Id_size+self.firstName_size]
-            lastName = line[self.Id_size+self.firstName_size:self.Id_size+self.firstName_size+self.lastName_size]
-            age = line[self.Id_size+self.firstName_size+self.lastName_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size]
-            ticketNum = line[self.Id_size+self.firstName_size+self.lastName_size+self.age_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size]
-            fare = line[self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size+self.fare_size]
-            dateOfPurchase = line[self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size+self.fare_size:self.Id_size+self.firstName_size+self.lastName_size+self.age_size+self.ticketNum_size+self.fare_size+self.dateOfPurchase_size]
-            self.record = dict({"ID":id,"firstName":firstName,"lastName":lastName,"age":age,"ticketNum":ticketNum,"fare":fare,"dateOfPurchase":dateOfPurchase})
+            lastName = line[self.Id_size:self.Id_size+self.lastName_size]
+            firstName = line[self.Id_size+self.lastName_size:self.Id_size+self.lastName_size+self.firstName_size]
+            age = line[self.Id_size+self.lastName_size+self.firstName_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size]
+            ticketNum = line[self.Id_size+self.lastName_size+self.firstName_size+self.age_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size]
+            fare = line[self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size]
+            dateOfPurchase = line[self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size+self.dateOfPurchase_size]
+            
+            record = dict({"ID":id,"lastName":lastName,"firstName":firstName,"age":age,"ticketNum":ticketNum,"fare":fare,"dateOfPurchase":dateOfPurchase})
+
+        return record
 
     #Binary Search by record id
     def binarySearch(self, input_ID):

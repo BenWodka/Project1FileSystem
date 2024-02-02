@@ -4,8 +4,9 @@ database = DB()
 
 
 running = True
-while running == True:
-    userChoice = input(DB.menu())
+while running:
+    DB.menu()
+    userChoice = input()
     match userChoice:
         case "1": #Create new database
             filename = input("\nEnter name of .csv file (i.e: for Titanic.csv, type 'Titanic' and hit enter.\n)")
@@ -19,7 +20,8 @@ while running == True:
         case "3": # Close database
             database.CloseDB()
         case "4": # Display Record
-            database.getRecord()
+            recordNum = int(input("\nEnter record number to display:\n"))
+            print(database.getRecord(recordNum))
         case "5": # Update Record
             database.updateRecord()
         case "6": # Create Report
