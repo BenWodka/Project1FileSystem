@@ -178,8 +178,8 @@ class DB:
 
         while not found and high >= low:
             self.middle = (low + high) // 2
-            self.getRecord(self.middle)
-            mid_id = self.record["ID"]
+            record = self.getRecord(self.middle)
+            mid_id = record["ID"]
 
             if mid_id.strip() == "_empty_":
                 non_empty_record = self.findNearestNonEmpty(self.middle, low, high)
@@ -190,8 +190,8 @@ class DB:
                     return False
 
                 self.middle = non_empty_record
-                self.getRecord(self.middle)
-                mid_id = self.record["ID"]
+                record = self.getRecord(self.middle)
+                mid_id = record["ID"]
                 if int(mid_id) > int(input_ID):
                     self.recordNum = self.middle - 1
                 else:
@@ -215,7 +215,7 @@ class DB:
             self.recordNum = high 
             print("Could not find record with ID", input_ID)
 
-        return found
+        return record
 
 
     
@@ -226,15 +226,15 @@ class DB:
         while True:
             # Check backward
             if start - step >= low_limit:
-                self.getRecord(start - step)
-                if self.record["ID"].strip() != "_empty_":
+                record = self.getRecord(start - step)
+                if record["ID"].strip() != "_empty_":
                     #print(self.record)
                     return start - step
 
             # Check forward
             if start + step <= high_limit:
-                self.getRecord(start + step)
-                if self.record["ID"].strip() != "_empty_":
+                record = self.getRecord(start + step)
+                if record["ID"].strip() != "_empty_":
                     #print(self.record)
                     return start + step
 

@@ -1,8 +1,5 @@
 from Database import DB
-
 database = DB()
-
-
 running = True
 while running:
     DB.menu()
@@ -21,7 +18,7 @@ while running:
             database.CloseDB()
         case "4": # Display Record
             recordNum = int(input("\nEnter record number to display:\n"))
-            print(database.getRecord(recordNum))
+            print(database.binarySearch(recordNum))
         case "5": # Update Record
             database.updateRecord()
         case "6": # Create Report
@@ -33,5 +30,3 @@ while running:
         case "9": #Quit
             database.CloseDB()
             running = False
-
-    
