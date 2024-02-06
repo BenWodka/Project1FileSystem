@@ -1,5 +1,5 @@
 import csv
-import os.path
+import os
 import ast
 
 class DB:
@@ -41,7 +41,11 @@ class DB:
         configContent = self.readConfigFile(filename)
 
         #sets attributes to what config file specifies
-        self.record_size = configContent["recordSize"]
+
+        if os.name == 'nt': #For windows machines
+            self.record_size = configContent["recordSize"] + 1
+        else:  #Linux/Mac
+            self.record_size = configContent["recordSize"]
         self.num_records = configContent["numRecords"]
         self.Id_size = configContent["PASSENGER_ID_SIZE"]
         self.lastName_size = configContent["LAST_NAME_SIZE"]
@@ -152,7 +156,7 @@ class DB:
 
         self.flag = False
         id = lastName = firstName = age = ticketNum = fare = dateOfPurchase = "None"
-        offset = recordNum*self.record_size
+        offset = (recordNum*self.record_size) - self.record_size
         # print(f"Self.record_size: {self.record_size}\n")
         # print(f"Seeking to byte offset: {offset}")
 
@@ -160,7 +164,7 @@ class DB:
             print("\nNo database file is open.\n")
             return None
 
-        if recordNum >=0 and recordNum < self.record_size:
+        if recordNum >=0 and recordNum < self.record_size and offset >= 0:
             #self.db_file.seek(0,0)
             self.db_file.seek(offset)
             line= self.db_file.readline().rstrip('\n')
@@ -177,8 +181,14 @@ class DB:
             dateOfPurchase = line[self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size+self.dateOfPurchase_size]
             
             record = dict({"ID":id,"lastName":lastName,"firstName":firstName,"age":age,"ticketNum":ticketNum,"fare":fare,"dateOfPurchase":dateOfPurchase})
+            #returns print statement is record is empty, otherwise returns record
+            return print(f"\nRecord #{recordNum} is empty.\n") if id == "_empty_" else record
+        
+        else:
+            return print(f"Could not find record #{recordNum}.\n")
 
-        return record
+
+
 
     #Binary Search by record id
     def binarySearch(self, input_ID):
@@ -277,7 +287,7 @@ class DB:
         print('1) Create new database')
         print('2) Open database')
         print('3) Close database')
-        print('4) Display record')
+        print('4) Read record')
         print('5) Update record')
         print('6) Create report')
         print('7) Add record')
