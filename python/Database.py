@@ -13,6 +13,7 @@ class DB:
         #91 bytes per record = 93 on Windows
         self.record_size = 0
         self.num_records = 0
+        self.record = 0
 
         self.Id_size=7  #must be 7 for _empty_
         self.lastName_size=20
@@ -33,6 +34,7 @@ class DB:
         text_filename = filename + ".data"
         #config_filename = filename + ".config"
 
+        print(f'checking .csv file path: {os.getcwd()}')
         if not os.path.isfile(csv_filename):
             print(str(csv_filename)+" not found")
             return False

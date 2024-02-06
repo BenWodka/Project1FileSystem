@@ -21,7 +21,7 @@ while running:
             database.CloseDB()
         case "4": # Display Record
             recordNum = int(input("\nEnter record number to display:\n"))
-            print(database.getRecord(recordNum))
+            print(database.binarySearch(recordNum))
         case "5": # Update Record
             database.updateRecord()
         case "6": # Create Report
