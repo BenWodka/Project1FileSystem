@@ -6,13 +6,13 @@ while running:
     userChoice = input()
     match userChoice:
         case "1": #Create new database
-            filename = input("\nEnter name of .csv file (i.e: for Titanic.csv, type 'Titanic' and hit enter.\n)")
+            filename = input("\nEnter name of .csv file (i.e: for Titanic.csv, type 'Titanic' and hit enter.)\n")
             database.createDB(filename)
         case "2": # Open database
             if database.databaseClosed() == False:
                 print("\nThere is a database already open. You must close it to proceed.\n")
             else:
-                db_name = input("\nEnter name of database to open (i.e: for Titanic database, type 'Titanic' and hit enter.\n)")
+                db_name = input("\nEnter name of database to open (i.e: for Titanic database, type 'Titanic' and hit enter.)\n")
                 database.openDB(db_name)
         case "3": # Close database
             database.CloseDB()

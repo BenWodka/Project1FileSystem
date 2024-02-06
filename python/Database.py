@@ -78,7 +78,7 @@ class DB:
                 with open(text_filename,"w") as outfile:
                 #ensures it reads csv file one line at a time
                     reader = csv.DictReader(csv_file, fieldnames=('ID', 'lastName', 'firstName', 'age', 'ticketNum', 'fare', 'dateOfPurchase'))
-                    print(reader)
+                    #print(reader)
                     #writes record one at a time (two if you count empty record)
                     for row in reader:
                         writeRecord(outfile,row)
@@ -119,7 +119,7 @@ class DB:
     def openDB(self, filename): #returns True if successful
 
         #Checks if a database is already open
-        if self.dbClosed == False or self.db_file is not None:
+        if self.dbClosed == False:
             print("A database is already open. Please close it before opening another.")
             return False
         
@@ -136,14 +136,25 @@ class DB:
             print("\nDatabase opened successfully.\n")
             return True
         
+        #close the database
+    def CloseDB(self):
+
+        if self.db_file: #Makes sure a db is open
+            self.db_file.close()  # Close the file properly
+            self.db_file = None
+            self.dbClosed = True
+            print(f"\nDatabase closed successfully.\n")
+        else:
+            print("\nNo open database file to close.\n")
+        
     #FIX - Need this to be able to handle the _empty_ fields
     def getRecord(self, recordNum):
 
         self.flag = False
         id = lastName = firstName = age = ticketNum = fare = dateOfPurchase = "None"
         offset = recordNum*self.record_size
-        print(f"Self.record_size: {self.record_size}\n")
-        print(f"Seeking to byte offset: {offset}")
+        # print(f"Self.record_size: {self.record_size}\n")
+        # print(f"Seeking to byte offset: {offset}")
 
         if self.db_file is None:
             print("\nNo database file is open.\n")
@@ -186,7 +197,7 @@ class DB:
                 if non_empty_record == -1:
                     # If no non-empty record found, set recordNum for potential insertion
                     self.recordNum = high 
-                    print("Could not find record with ID..", input_ID)
+                    print(f"Could not find record with ID #{input_ID}. You may try adding a record here or search for another.\n")
                     return False
 
                 self.middle = non_empty_record
@@ -247,27 +258,19 @@ class DB:
 
         return -1  # No non-empty record found
 
-    #close the database
-    def CloseDB(self):
 
-        if self.db_file: #Makes sure a db is open
-            self.db_file.close()  # Close the file properly
-            self.dbClosed = True
-            print(f"\nDatabase closed successfully.\n")
-        else:
-            print("\nNo open database file to close.\n")
 
     def updateRecord(self):
-        print()
+        print("\nUpdate Record function coming soon\n")
     
     def createRecord(self):
-        print()
+        print("\nCreate Record function coming soon\n")
 
     def addRecord(self):
-        print()
+        print("\nAdd Record function coming soon\n")
     
     def deleteRecord(self):
-        print()
+        print("\nDelete Record function coming soon\n")
         
     def menu():
         print("\nWelcome to the database. Choose one of the following menu options:")
