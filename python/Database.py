@@ -164,7 +164,7 @@ class DB:
             print("\nNo database file is open.\n")
             return None
 
-        if recordNum >=0 and recordNum < self.record_size and offset >= 0:
+        if recordNum >=0 and recordNum <= self.num_records and offset >= 0:
             #self.db_file.seek(0,0)
             self.db_file.seek(offset)
             line= self.db_file.readline().rstrip('\n')
