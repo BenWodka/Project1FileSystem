@@ -282,7 +282,7 @@ class DB:
     def deleteRecord(self):
         print("\nDelete Record function coming soon\n")
         
-    def menu():
+    def menu(self):
         print("\nWelcome to the database. Choose one of the following menu options:")
         print('1) Create new database')
         print('2) Open database')
