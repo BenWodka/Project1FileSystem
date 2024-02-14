@@ -156,7 +156,7 @@ class DB:
 
         self.flag = False
         id = lastName = firstName = age = ticketNum = fare = dateOfPurchase = "None"
-        offset = (recordNum*self.record_size) - self.record_size
+        offset = (recordNum*self.record_size) 
         # print(f"Self.record_size: {self.record_size}\n")
         # print(f"Seeking to byte offset: {offset}")
 
@@ -268,7 +268,8 @@ class DB:
 
         return -1  # No non-empty record found
 
-
+    def displayRecord(self):
+        print("\n Display Record Coming Soon\n")
 
     def updateRecord(self):
         print("\nUpdate Record function coming soon\n")
@@ -288,11 +289,9 @@ class DB:
         print('2) Open database')
         print('3) Close database')
         print('4) Read record')
-        print('5) Update record')
+        print('5) Display record')
         print('6) Create report')
-        print('7) Add record')
+        print('7) Update record')
         print('8) Delete record')
-        print('9) Quit\n')
-
-
-
+        print('9) Add record')
+        print('10) Quit\n')
