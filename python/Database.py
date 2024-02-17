@@ -1,6 +1,8 @@
+import ast
 import csv
 import os
-import ast
+
+
 
 class DB:
 
@@ -151,95 +153,82 @@ class DB:
         else:
             print("\nNo open database file to close.\n")
         
-    #FIX - Need this to be able to handle the _empty_ fields
-    def getRecord(self, recordNum):
 
-        self.flag = False
-        id = lastName = firstName = age = ticketNum = fare = dateOfPurchase = "None"
-        offset = (recordNum*self.record_size) 
-        # print(f"Self.record_size: {self.record_size}\n")
-        # print(f"Seeking to byte offset: {offset}")
+    def getRecord(self, recordNum):
+       
 
         if self.db_file is None:
             print("\nNo database file is open.\n")
             return None
 
-        if recordNum >=0 and recordNum <= self.num_records and offset >= 0:
-            #self.db_file.seek(0,0)
-            self.db_file.seek(offset)
-            line= self.db_file.readline().rstrip('\n')
-            self.flag = True
-        
-        if self.flag:
-            #Ok so what i did here was make the bounds dependent on the variable size, so we dont have to rewrite this every time we change a variable size.
-            id = line[0:self.Id_size]
-            lastName = line[self.Id_size:self.Id_size+self.lastName_size]
-            firstName = line[self.Id_size+self.lastName_size:self.Id_size+self.lastName_size+self.firstName_size]
-            age = line[self.Id_size+self.lastName_size+self.firstName_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size]
-            ticketNum = line[self.Id_size+self.lastName_size+self.firstName_size+self.age_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size]
-            fare = line[self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size]
-            dateOfPurchase = line[self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size:self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size+self.dateOfPurchase_size]
+        offset = recordNum * self.record_size
+     
+
+        self.db_file.seek(offset)
+        line = self.db_file.readline().rstrip('\n')
+
+     
+
+        if not line:
+            print(f"Could not find record #{recordNum}.\n")
+            return None
+
+        id, lastName, firstName, age, ticketNum, fare, dateOfPurchase = (
+            line[i:j].strip() for i, j in zip(
+                [0, self.Id_size, self.Id_size+self.lastName_size, self.Id_size+self.lastName_size+self.firstName_size, 
+                self.Id_size+self.lastName_size+self.firstName_size+self.age_size, 
+                self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size, 
+                self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size],
+                [self.Id_size, self.Id_size+self.lastName_size, self.Id_size+self.lastName_size+self.firstName_size, 
+                self.Id_size+self.lastName_size+self.firstName_size+self.age_size, 
+                self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size, 
+                self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size, 
+                self.Id_size+self.lastName_size+self.firstName_size+self.age_size+self.ticketNum_size+self.fare_size+self.dateOfPurchase_size]
+            )
+        )
+
+        if id == "_empty_":
+           
             
-            record = dict({"ID":id,"lastName":lastName,"firstName":firstName,"age":age,"ticketNum":ticketNum,"fare":fare,"dateOfPurchase":dateOfPurchase})
-            #returns print statement is record is empty, otherwise returns record
-            return print(f"\nRecord #{recordNum} is empty.\n") if id == "_empty_" else record
-        
-        else:
-            return print(f"Could not find record #{recordNum}.\n")
+            return None
+
+       
+
+        return {"ID": id, "lastName": lastName, "firstName": firstName, "age": age, "ticketNum": ticketNum, "fare": fare, "dateOfPurchase": dateOfPurchase}
 
 
-
-
-    #Binary Search by record id
     def binarySearch(self, input_ID):
-        low = 0
-        high = self.record_size - 1
-        found = False
-        self.recordNum = None  # Initialize the insertion point
+        low, high = 0, self.num_records - 1
 
-        while not found and high >= low:
-            self.middle = (low + high) // 2
-            record = self.getRecord(self.middle)
-            mid_id = record["ID"]
+        while low <= high:
+            mid = (low + high) // 2
+            mid_record = self.getRecord(mid)
 
-            if mid_id.strip() == "_empty_":
-                non_empty_record = self.findNearestNonEmpty(self.middle, low, high)
-                if non_empty_record == -1:
-                    # If no non-empty record found, set recordNum for potential insertion
-                    self.recordNum = high 
-                    print(f"Could not find record with ID #{input_ID}. You may try adding a record here or search for another.\n")
-                    return False
-
-                self.middle = non_empty_record
-                record = self.getRecord(self.middle)
-                mid_id = record["ID"]
-                if int(mid_id) > int(input_ID):
-                    self.recordNum = self.middle - 1
+            # If the record is "_empty_", try finding the nearest non-empty record.
+            if mid_record is None or mid_record["ID"].strip() == "_empty_":
+                nearest_non_empty = self.findNearestNonEmpty(mid, low, high)
+                if nearest_non_empty == -1:
+                    print(f"Could not find record with ID {input_ID}.")
+                    return None
                 else:
-                    self.recordNum = self.middle + 1
+                    mid_record = self.getRecord(nearest_non_empty)
+                    # Adjust mid to the nearest non-empty for accurate comparison
+                    mid = nearest_non_empty
 
-            if mid_id != "_empty_":
-                try:
-                    if int(mid_id) == int(input_ID):
-                        found = True
-                        self.recordNum = self.middle
-                    elif int(mid_id) > int(input_ID):
-                        high = self.middle - 1
-                    elif int(mid_id) < int(input_ID):
-                        low = self.middle + 1
-                except ValueError:
-                    # Handle non-integer IDs
-                    high = self.middle - 1
+            mid_id = mid_record["ID"].strip()
 
-        if not found and self.recordNum is None:
-            # Set recordNum to high + 1 if no suitable spot is found
-            self.recordNum = high 
-            print("Could not find record with ID", input_ID)
+           
+            if int(mid_id) == int(input_ID):
+                return mid_record
+            elif int(mid_id) < int(input_ID):
+                low = mid + 1
+            else:
+                high = mid - 1
 
-        return record
+        print(f"Record with ID {input_ID} not found.")
+        return None
 
 
-    
 
     def findNearestNonEmpty(self, start, low_limit, high_limit):
         step = 1  # Initialize step size
@@ -268,21 +257,178 @@ class DB:
 
         return -1  # No non-empty record found
 
-    def displayRecord(self):
-        print("\n Display Record Coming Soon\n")
+   
+    def displayRecord(self, passengerId):
+        result = self.binarySearch(passengerId)
+        if result:
+            # Assuming result is the record dict
+            print("\nRecord Details:")
+            for field, value in result.items():
+                print(f"{field}: {value}")
+        else:
+         print(f"Record with passengerId {passengerId} not found.")
+
 
     def updateRecord(self):
-        print("\nUpdate Record function coming soon\n")
-    
+        # passenger ID to update record
+        passengerId = input("\nEnter passenger ID to update record:\n").strip()
+        # Check if the passenger ID is valid
+        if not passengerId.isdigit():
+            print("Invalid passenger ID. Please enter a valid numeric ID.")
+            return
+
+        # Find the record
+        record = self.binarySearch(passengerId)
+        if record:
+            # Display the current record
+            print("\nCurrent Record Details:")
+            for field, value in record.items():
+                print(f"{field}: {value}")
+
+            # Prompt the user to select a field to update
+            print("\nSelect the field to update (excluding primary key):")
+            print("1. Last Name")
+            print("2. First Name")
+            print("3. Age")
+            print("4. Ticket Number")
+            print("5. Fare")
+            print("6. Date of Purchase")
+            choice = input("Enter your choice: ")
+
+            # Validate user input
+            if choice not in {'1', '2', '3', '4', '5', '6'}:
+                print("Invalid choice. Please enter a number between 1 and 6.")
+                return
+
+            # Prompt the user for the new value
+            new_value = input("Enter the new value: ").strip()
+
+            # Update the selected field
+            if choice == '1':
+                record['lastName'] = new_value
+            elif choice == '2':
+                record['firstName'] = new_value
+            elif choice == '3':
+                record['age'] = new_value
+            elif choice == '4':
+                record['ticketNum'] = new_value
+            elif choice == '5':
+                record['fare'] = new_value
+            elif choice == '6':
+                record['dateOfPurchase'] = new_value
+
+            # Write the updated record back to the database file
+            self.writeUpdatedRecord(record)
+            print("Record updated successfully.")
+        else:
+            print(f"Record with passenger ID {passengerId} not found.")
+
+    def writeUpdatedRecord(self, record):
+        # Find the position of the record in the file
+        offset = self.findRecordOffset(record['ID'])
+
+        # Write the updated record back to the file
+        with open(self.filestream, 'r+') as file:
+            file.seek(offset)
+            file.write("{:{width}.{width}}".format(record["ID"], width=self.Id_size))
+            file.write("{:{width}.{width}}".format(record["lastName"], width=self.lastName_size))
+            file.write("{:{width}.{width}}".format(record["firstName"], width=self.firstName_size))
+            file.write("{:{width}.{width}}".format(record["age"], width=self.age_size))
+            file.write("{:{width}.{width}}".format(record["ticketNum"], width=self.ticketNum_size))
+            file.write("{:{width}.{width}}".format(record["fare"], width=self.fare_size))
+            file.write("{:{width}.{width}}".format(record["dateOfPurchase"], width=self.dateOfPurchase_size))
+            file.write("\n")
+
+   
+    def findRecordOffset(self, passengerId):
+        # Binary search to find the record position in the file
+        low, high = 0, self.num_records - 1
+
+        while low <= high:
+            mid = (low + high) // 2
+            mid_record = self.getRecord(mid)
+
+            if mid_record is None or mid_record["ID"].strip() == "_empty_":
+                nearest_non_empty = self.findNearestNonEmpty(mid, low, high)
+                if nearest_non_empty == -1:
+                    print(f"Could not find record with ID {passengerId}.")
+                    return None
+                else:
+                    mid_record = self.getRecord(nearest_non_empty)
+                    
+                    mid = nearest_non_empty
+
+            mid_id = mid_record["ID"].strip()
+
+            
+            if int(mid_id) == int(passengerId):
+                
+                offset = mid * self.record_size
+                return offset
+            elif int(mid_id) < int(passengerId):
+                low = mid + 1
+            else:
+                high = mid - 1
+
+        print(f"Record with ID {passengerId} not found.")
+        return None
+
     def createRecord(self):
-        print("\nCreate Record function coming soon\n")
+        if self.db_file is None:
+            print("\nNo database file is open.\n")
+            return
+
+        print("Creating report of the first ten records...")
+        print("\n{:<10} {:<20} {:<20} {:<5} {:<25} {:<10} {:<15}".format('ID', 'Last Name', 'First Name', 'Age', 'Ticket Number', 'Fare', 'Date of Purchase'))
+        print("-" * 105)  
+
+        for recordNum in range(10):
+            record = self.getRecord(recordNum)
+            if record is None:
+                continue  
+            print("{ID:<10} {lastName:<20} {firstName:<20} {age:<5} {ticketNum:<25} {fare:<10} {dateOfPurchase:<15}".format(**record))
+
+        print("\nReport generated successfully.")
+
 
     def addRecord(self):
         print("\nAdd Record function coming soon\n")
     
     def deleteRecord(self):
-        print("\nDelete Record function coming soon\n")
-        
+        if self.db_file is None or self.dbClosed:
+            print("\nNo open database file.\n")
+            return
+
+        passengerId = input("\nEnter passenger ID to delete:\n").strip()
+
+        if not passengerId.isdigit():
+            print("Invalid passenger ID. Please enter a valid numeric ID.")
+            return
+
+        record = self.binarySearch(passengerId)
+        if record:
+            
+            confirmation = input(f"Are you sure you want to delete record {passengerId}? (yes/no):\n").strip().lower()
+            if confirmation != 'yes':
+                print("Deletion cancelled.")
+                return
+            self.markRecordAsDeleted(passengerId)
+            print(f"Record {passengerId} deleted successfully.")
+        else:
+            print(f"Record with ID {passengerId} not found.")
+
+    def markRecordAsDeleted(self, passengerId):
+        offset = self.findRecordOffset(passengerId)
+        if offset is not None:
+            with open(self.filestream, 'r+') as file:
+                file.seek(offset)   
+                file.write("_empty_".ljust(self.Id_size))  
+                file.write(" ".ljust(self.record_size - self.Id_size - 1))
+                file.write("\n")
+        else:
+            print("Error finding record offset.")
+
+            
     def menu(self):
         print("\nWelcome to the database. Choose one of the following menu options:")
         print('1) Create new database')

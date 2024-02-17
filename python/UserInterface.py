@@ -19,15 +19,23 @@ while running:
         recordNum = int(input("\nEnter record ID to display:\n"))
         print(database.getRecord(recordNum))
     elif userChoice == "5":  # Display Record
-        database.displayRecord()
-    elif userChoice == "6":  # Create Report
+         # Before calling database.displayRecord(passengerId), make sure passengerId is valid
+        passengerId = input("\nEnter passenger ID to display:\n").strip()
+
+# Validate passengerId is not empty and is a digit
+        if not passengerId.isdigit():
+            print("Invalid passenger ID. Please enter a valid numeric ID.")
+        else:
+            database.displayRecord(passengerId)
+
+    elif userChoice == "6":  # Create Report done
         database.createRecord()
-    elif userChoice == "7":  # Update Record
+    elif userChoice == "7":  # Update Record  done
         database.updateRecord()
-    elif userChoice == "8":  # Delete Record
+    elif userChoice == "8":  # Delete Record  not done
         database.deleteRecord()
-    elif userChoice == "9":  # Add Record
+    elif userChoice == "9":  # Add Record not done
         database.addRecord()
-    elif userChoice == "10": # Quit
+    elif userChoice == "10": # Quit done
         database.CloseDB()
         running = False
