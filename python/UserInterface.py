@@ -3,7 +3,7 @@ database = DB()
 running = True
 while running:
     database.menu()
-    userChoice = input()  # Use raw_input in Python 2.7 for string input
+    userChoice = input()  
     if userChoice == "1":  # Create new database
         filename = input("\nEnter name of .csv file (i.e: for Titanic.csv, type 'Titanic' and hit enter.)\n")
         database.createDB(filename)

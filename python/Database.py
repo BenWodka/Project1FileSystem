@@ -12,7 +12,7 @@ class DB:
         self.db_file = None
         self.dbClosed = True
 
-        #91 bytes per record = 93 on Windows
+        
         self.record_size = 0
         self.num_records = 0
 
@@ -197,7 +197,7 @@ class DB:
         return {"ID": id, "lastName": lastName, "firstName": firstName, "age": age, "ticketNum": ticketNum, "fare": fare, "dateOfPurchase": dateOfPurchase}
 
 
-    def binarySearch(self, input_ID):
+    def binarySearch(self, input_ID, flag):
         low, high = 0, self.num_records - 1
 
         while low <= high:
@@ -208,8 +208,10 @@ class DB:
             if mid_record is None or mid_record["ID"].strip() == "_empty_":
                 nearest_non_empty = self.findNearestNonEmpty(mid, low, high)
                 if nearest_non_empty == -1:
-                    print(f"Could not find record with ID {input_ID}.")
-                    return None
+                    if flag is False:
+                        print(f"Could not find record with ID {input_ID}.")
+                        return None
+                    return mid
                 else:
                     mid_record = self.getRecord(nearest_non_empty)
                     # Adjust mid to the nearest non-empty for accurate comparison
@@ -225,7 +227,11 @@ class DB:
             else:
                 high = mid - 1
 
-        print(f"Record with ID {input_ID} not found.")
+        if flag is False:
+            print(f"Record with ID {input_ID} not found.")
+        else:
+            print(f"Could not add ID {input_ID}, database may be full in this location.\n")
+        #print(f"\nmid: {mid}\n")
         return None
 
 
@@ -259,7 +265,7 @@ class DB:
 
    
     def displayRecord(self, passengerId):
-        result = self.binarySearch(passengerId)
+        result = self.binarySearch(passengerId, False)
         if result:
             # Assuming result is the record dict
             print("\nRecord Details:")
@@ -278,7 +284,7 @@ class DB:
             return
 
         # Find the record
-        record = self.binarySearch(passengerId)
+        record = self.binarySearch(passengerId, False)
         if record:
             # Display the current record
             print("\nCurrent Record Details:")
@@ -392,7 +398,45 @@ class DB:
 
 
     def addRecord(self):
-        print("\nAdd Record function coming soon\n")
+        if self.db_file is None or self.dbClosed:
+            print("\nNo open database file.\n")
+            return
+
+        print("\nAdding a new record to the database.\n")
+
+        id = input("Enter passenger ID:\n").strip()
+
+        if not id.isdigit():
+                print("Invalid ID. ID must be a number.")
+                return
+
+        # if self.binarySearch(id) is not None:
+        #     print(f"ID already exists. Each passenger ID must be unique.")
+        #     return
+
+        new_record = {
+            "ID": id,
+            "lastName": input("Enter last name:\n").strip(),
+            "firstName": input("Enter first name:\n").strip(),
+            "age": input("Enter age:\n").strip(),
+            "ticketNum": input("Enter ticket number:\n").strip(),
+            "fare": input("Enter fare:\n").strip(),
+            "dateOfPurchase": input("Enter date of purchase (MM-DD-YYYY):\n").strip()
+        }
+
+        line = self.binarySearch(id, True)
+        if line is not None:
+            offset = line * self.record_size
+            with open(self.filestream, 'r+') as file:
+                file.seek(offset)
+                file.write("{:{width}.{width}}".format(new_record["ID"],width=self.Id_size))
+                file.write("{:{width}.{width}}".format(new_record["lastName"],width=self.lastName_size))            
+                file.write("{:{width}.{width}}".format(new_record["firstName"],width=self.firstName_size))
+                file.write("{:{width}.{width}}".format(new_record["age"],width=self.age_size))
+                file.write("{:{width}.{width}}".format(new_record["ticketNum"],width=self.ticketNum_size))
+                file.write("{:{width}.{width}}".format(new_record["fare"],width=self.fare_size))
+                file.write("{:{width}.{width}}".format(new_record["dateOfPurchase"],width=self.dateOfPurchase_size))
+                file.write("\n")
     
     def deleteRecord(self):
         if self.db_file is None or self.dbClosed:
@@ -405,7 +449,7 @@ class DB:
             print("Invalid passenger ID. Please enter a valid numeric ID.")
             return
 
-        record = self.binarySearch(passengerId)
+        record = self.binarySearch(passengerId, False)
         if record:
             
             confirmation = input(f"Are you sure you want to delete record {passengerId}? (yes/no):\n").strip().lower()
